@@ -4,18 +4,24 @@ const jobsList = document.querySelector("#jobs-list");
 const statusText = document.querySelector("#status");
 const printer = document.querySelector("#printer");
 const soundToggle = document.querySelector("#sound-toggle");
+const soundState = document.querySelector("#sound-state");
+const soundAction = document.querySelector("#sound-action");
 
 let latestRenderedId = null;
-let soundEnabled = false;
-let audioContext = null;
+let soundEnabled = true;
+const printSound = new Audio("/static/printer-sound.mp4");
+printSound.preload = "auto";
+printSound.volume = 0.65;
+
+function updateSoundToggle() {
+  soundState.textContent = soundEnabled ? "Sound: on" : "Sound: off";
+  soundAction.textContent = soundEnabled ? "Click to mute" : "Click to enable";
+  soundToggle.setAttribute("aria-pressed", soundEnabled ? "true" : "false");
+}
 
 soundToggle.addEventListener("click", () => {
   soundEnabled = !soundEnabled;
-  soundToggle.textContent = soundEnabled ? "Sound on" : "Sound off";
-  soundToggle.setAttribute("aria-pressed", soundEnabled ? "true" : "false");
-  if (soundEnabled && audioContext === null) {
-    audioContext = new AudioContext();
-  }
+  updateSoundToggle();
 });
 
 async function loadJobs() {
@@ -71,20 +77,13 @@ function pulsePrinter() {
 }
 
 function playPrintSound() {
-  if (!soundEnabled || audioContext === null) {
+  if (!soundEnabled) {
     return;
   }
-  const osc = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-  osc.type = "square";
-  osc.frequency.setValueAtTime(175, audioContext.currentTime);
-  osc.frequency.linearRampToValueAtTime(125, audioContext.currentTime + 0.12);
-  gain.gain.setValueAtTime(0.05, audioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.14);
-  osc.connect(gain);
-  gain.connect(audioContext.destination);
-  osc.start();
-  osc.stop(audioContext.currentTime + 0.15);
+  printSound.currentTime = 0;
+  printSound.play().catch(() => {
+    statusText.textContent = "Printed label rendered. Click once to allow sound.";
+  });
 }
 
 function escapeHtml(value) {
@@ -93,5 +92,6 @@ function escapeHtml(value) {
   return span.innerHTML;
 }
 
+updateSoundToggle();
 loadJobs();
 setInterval(loadJobs, 1200);

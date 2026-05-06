@@ -68,6 +68,24 @@ button:hover {
   border-color: #748092;
 }
 
+.sound-toggle {
+  min-width: 132px;
+  display: grid;
+  gap: 1px;
+  align-content: center;
+  text-align: left;
+}
+
+#sound-state {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#sound-action {
+  font-size: 11px;
+  color: #5d6875;
+}
+
 .preview {
   min-height: 420px;
   display: grid;
