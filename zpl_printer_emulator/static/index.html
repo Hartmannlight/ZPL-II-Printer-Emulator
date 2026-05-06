@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZPL-II Printer Emulator</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>ZPL-II Printer Emulator</h1>
+          <p id="status">Waiting for print jobs</p>
+        </div>
+        <button id="sound-toggle" type="button" aria-pressed="false">Sound off</button>
+      </header>
+
+      <section class="preview" aria-live="polite">
+        <div id="printer" class="printer">
+          <div class="slot"></div>
+          <div class="label-wrap">
+            <img id="label-image" alt="Latest rendered label" />
+            <div id="empty-state">No label printed yet</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="jobs">
+        <h2>Recent jobs</h2>
+        <div id="jobs-list" class="jobs-list"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
