@@ -7,31 +7,79 @@
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
-    <main class="shell">
+    <main class="app-shell">
       <header class="topbar">
-        <div>
-          <h1>ZPL-II Printer Emulator</h1>
-          <p id="status">Waiting for print jobs</p>
-        </div>
-        <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
-          <span id="sound-state">Sound: on</span>
-          <span id="sound-action">Click to mute</span>
-        </button>
-      </header>
-
-      <section class="preview" aria-live="polite">
-        <div id="printer" class="printer">
-          <div class="slot"></div>
-          <div class="label-wrap">
-            <img id="label-image" alt="Latest rendered label" />
-            <div id="empty-state">No label printed yet</div>
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <h1>ZPL-II Printer Emulator</h1>
+            <p id="status">Waiting for print jobs</p>
           </div>
         </div>
+        <div class="topbar-controls">
+          <div class="target-control" aria-label="Printer target">
+            <span>Printer target</span>
+            <strong>virtual-zpl-dev</strong>
+          </div>
+          <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+            <span id="sound-state">Sound: on</span>
+            <span id="sound-action">Click to mute</span>
+          </button>
+          <div class="mode-switch" role="group" aria-label="Output mode">
+            <button id="latest-mode" class="mode-button" type="button" data-mode="latest">Latest label</button>
+            <button id="strip-mode" class="mode-button" type="button" data-mode="strip">Continuous strip</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="preview" aria-live="polite">
+          <div id="printer" class="printer">
+            <div class="printer-shadow" aria-hidden="true"></div>
+            <div class="printer-top">
+              <div class="printer-badge">ZPL-II</div>
+              <div class="printer-light" aria-hidden="true"></div>
+            </div>
+            <div class="printer-face" aria-hidden="true">
+              <div class="media-guide media-guide-left"></div>
+              <div class="media-guide media-guide-right"></div>
+              <div class="status-window">
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="slot" aria-hidden="true">
+              <div class="roller roller-back"></div>
+              <div class="roller roller-front"></div>
+              <div class="tear-bar"></div>
+            </div>
+            <div class="output-tray">
+              <div class="output-viewport">
+                <div id="label-wrap" class="label-wrap">
+                  <img id="label-image" alt="Latest rendered label" />
+                  <div id="label-strip" class="label-strip" aria-label="Continuous label strip"></div>
+                  <div id="empty-state">No label printed yet</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="jobs">
+          <div class="jobs-heading">
+            <h2>Recent jobs</h2>
+            <span id="job-count">0 jobs</span>
+          </div>
+          <div id="jobs-list" class="jobs-list"></div>
+        </section>
       </section>
 
-      <section class="jobs">
-        <h2>Recent jobs</h2>
-        <div id="jobs-list" class="jobs-list"></div>
+      <section class="test-print">
+        <div>
+          <h2>Quick test</h2>
+          <p>Send a small ZPL label directly to the emulator.</p>
+        </div>
+        <button id="test-print" type="button">Print test label</button>
       </section>
     </main>
 
