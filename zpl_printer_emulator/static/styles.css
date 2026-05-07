@@ -27,22 +27,33 @@ body {
 }
 
 .app-shell {
-  width: min(1440px, calc(100vw - 28px));
+  width: min(1500px, calc(100vw - 28px));
   margin: 0 auto;
   padding: 18px 0 28px;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.control-panel {
+  min-height: calc(100vh - 46px);
+  max-height: calc(100vh - 46px);
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(240px, 1fr) auto;
+  gap: 12px;
+  overflow: auto;
+  scrollbar-color: #5b6673 #111820;
 }
 
 .topbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  align-items: flex-start;
   min-height: 70px;
   border: 1px solid rgb(255 255 255 / 10%);
   border-radius: 7px;
   background: linear-gradient(180deg, rgb(14 19 25 / 96%), rgb(8 12 17 / 96%));
-  padding: 12px 16px;
-  margin-bottom: 14px;
+  padding: 14px;
   box-shadow: 0 18px 50px rgb(0 0 0 / 30%);
 }
 
@@ -71,10 +82,9 @@ h2 {
   font-size: 14px;
 }
 
-.brand,
-.topbar-controls {
+.brand {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 14px;
 }
 
@@ -121,6 +131,25 @@ button {
   cursor: pointer;
 }
 
+input,
+select {
+  width: 100%;
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #0f151c;
+  color: #edf2f7;
+  font: inherit;
+  padding: 0 10px;
+}
+
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid rgb(34 115 230 / 75%);
+  outline-offset: 2px;
+}
+
 button:hover {
   border-color: #596577;
 }
@@ -133,13 +162,13 @@ button:disabled {
 .target-control {
   min-height: 40px;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
   border: 1px solid var(--line);
   border-radius: 6px;
   background: #0f151c;
-  padding: 0 12px;
-  white-space: nowrap;
+  padding: 9px 12px;
 }
 
 .target-control span {
@@ -152,7 +181,8 @@ button:disabled {
 }
 
 .sound-toggle {
-  min-width: 136px;
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 1px;
   align-content: center;
@@ -180,6 +210,7 @@ button:disabled {
 
 .mode-switch {
   display: flex;
+  width: 100%;
   min-height: 40px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -189,7 +220,8 @@ button:disabled {
 }
 
 .mode-button {
-  min-width: 142px;
+  min-width: 0;
+  flex: 1 1 0;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -202,22 +234,69 @@ button:disabled {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(560px, 1fr) 390px;
-  gap: 14px;
   align-items: stretch;
+  min-width: 0;
 }
 
-.jobs,
-.test-print {
+.panel-section {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: linear-gradient(180deg, rgb(19 27 36 / 94%), rgb(12 18 25 / 94%));
+  padding: 12px;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
+}
+
+.panel-section h2 {
+  margin-bottom: 10px;
+}
+
+.panel-section > * + * {
+  margin-top: 10px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.section-heading h2 {
+  margin: 0;
+}
+
+#media-status {
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.field-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.field-grid label {
+  display: grid;
+  gap: 5px;
+}
+
+.field-grid label span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#apply-media,
+#test-print {
+  width: 100%;
+  background: var(--accent);
+  border-color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .preview {
   min-height: 700px;
-  max-height: calc(100vh - 176px);
+  max-height: calc(100vh - 46px);
   display: grid;
   place-items: end center;
   border: 1px solid rgb(255 255 255 / 10%);
@@ -537,7 +616,9 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
 }
 
 .jobs {
-  min-height: 640px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -546,7 +627,7 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 18px 16px 4px;
+  padding: 0 0 2px;
 }
 
 .jobs-heading h2 {
@@ -561,9 +642,11 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
 .jobs-list {
   display: flex;
   flex-direction: column;
-  max-height: 588px;
+  flex: 1 1 auto;
+  min-height: 320px;
+  max-height: none;
   overflow: auto;
-  padding: 10px 10px 12px;
+  padding: 0;
 }
 
 .job {
@@ -618,13 +701,7 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
 }
 
 .test-print {
-  min-height: 70px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  margin-top: 14px;
-  padding: 14px 16px;
+  min-height: 0;
 }
 
 .test-print h2 {
@@ -634,12 +711,6 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
 .test-print p {
   color: var(--muted);
   font-size: 14px;
-}
-
-#test-print {
-  background: var(--accent);
-  border-color: var(--accent-strong);
-  font-weight: 700;
 }
 
 @keyframes label-feed {
@@ -680,26 +751,37 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
 }
 
 @media (max-width: 1120px) {
-  .topbar,
-  .topbar-controls {
-    align-items: stretch;
-    flex-direction: column;
+  .app-shell {
+    grid-template-columns: 320px minmax(0, 1fr);
   }
 
-  .brand {
-    align-items: flex-start;
-  }
-
-  .workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .jobs {
-    min-height: auto;
+  .preview {
+    min-height: 660px;
   }
 
   .jobs-list {
-    max-height: 360px;
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 860px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel {
+    min-height: auto;
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto;
+    align-items: start;
+  }
+
+  .topbar,
+  .jobs,
+  .test-print {
+    grid-column: 1 / -1;
   }
 }
 
@@ -717,8 +799,9 @@ body[data-view-mode="strip"] .printer.printing .label-strip {
     gap: 10px;
   }
 
-  .topbar-controls {
-    gap: 10px;
+  .control-panel {
+    display: flex;
+    flex-direction: column;
   }
 
   .target-control {

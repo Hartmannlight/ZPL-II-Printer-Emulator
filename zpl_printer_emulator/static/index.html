@@ -8,29 +8,79 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark" aria-hidden="true"></div>
-          <div>
-            <h1>ZPL-II Printer Emulator</h1>
-            <p id="status">Waiting for print jobs</p>
+      <aside class="control-panel" aria-label="Printer controls">
+        <header class="topbar">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <div>
+              <h1>ZPL-II Printer Emulator</h1>
+              <p id="status">Waiting for print jobs</p>
+            </div>
           </div>
-        </div>
-        <div class="topbar-controls">
+        </header>
+
+        <section class="panel-section">
           <div class="target-control" aria-label="Printer target">
             <span>Printer target</span>
             <strong>virtual-zpl-dev</strong>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <h2>Output</h2>
+          <div class="mode-switch" role="group" aria-label="Output mode">
+            <button id="latest-mode" class="mode-button" type="button" data-mode="latest">Latest label</button>
+            <button id="strip-mode" class="mode-button" type="button" data-mode="strip">Continuous strip</button>
           </div>
           <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
             <span id="sound-state">Sound: on</span>
             <span id="sound-action">Click to mute</span>
           </button>
-          <div class="mode-switch" role="group" aria-label="Output mode">
-            <button id="latest-mode" class="mode-button" type="button" data-mode="latest">Latest label</button>
-            <button id="strip-mode" class="mode-button" type="button" data-mode="strip">Continuous strip</button>
+        </section>
+
+        <section class="panel-section media-panel">
+          <div class="section-heading">
+            <h2>Media</h2>
+            <span id="media-status">50 x 25 mm</span>
           </div>
-        </div>
-      </header>
+          <div class="field-grid">
+            <label>
+              <span>Width mm</span>
+              <input id="label-width-mm" type="number" min="10" max="300" step="0.1" inputmode="decimal" />
+            </label>
+            <label>
+              <span>Height mm</span>
+              <input id="label-height-mm" type="number" min="10" max="300" step="0.1" inputmode="decimal" />
+            </label>
+            <label>
+              <span>Density</span>
+              <select id="label-dpmm">
+                <option value="6">6 dpmm / 152 dpi</option>
+                <option value="8">8 dpmm / 203 dpi</option>
+                <option value="12">12 dpmm / 300 dpi</option>
+                <option value="24">24 dpmm / 600 dpi</option>
+              </select>
+            </label>
+          </div>
+          <button id="apply-media" type="button">Apply media</button>
+        </section>
+
+        <section class="jobs panel-section">
+          <div class="jobs-heading">
+            <h2>Recent jobs</h2>
+            <span id="job-count">0 jobs</span>
+          </div>
+          <div id="jobs-list" class="jobs-list"></div>
+        </section>
+
+        <section class="test-print panel-section">
+          <div>
+            <h2>Quick test</h2>
+            <p>Send a small ZPL label directly to the emulator.</p>
+          </div>
+          <button id="test-print" type="button">Print test label</button>
+        </section>
+      </aside>
 
       <section class="workspace">
         <section class="preview" aria-live="polite">
@@ -64,22 +114,6 @@
             </div>
           </div>
         </section>
-
-        <section class="jobs">
-          <div class="jobs-heading">
-            <h2>Recent jobs</h2>
-            <span id="job-count">0 jobs</span>
-          </div>
-          <div id="jobs-list" class="jobs-list"></div>
-        </section>
-      </section>
-
-      <section class="test-print">
-        <div>
-          <h2>Quick test</h2>
-          <p>Send a small ZPL label directly to the emulator.</p>
-        </div>
-        <button id="test-print" type="button">Print test label</button>
       </section>
     </main>
 

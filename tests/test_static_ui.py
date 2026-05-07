@@ -15,6 +15,8 @@ def test_index_exposes_emulator_controls() -> None:
     assert "ZPL-II Printer Emulator" in response.text
     assert "Latest label" in response.text
     assert "Continuous strip" in response.text
+    assert "Media" in response.text
+    assert "Apply media" in response.text
     assert "Print test label" in response.text
 
 
@@ -27,5 +29,7 @@ def test_static_frontend_assets_are_served() -> None:
 
     assert script_response.status_code == 200
     assert "zpl-printer-view-mode" in script_response.text
+    assert "/api/settings" in script_response.text
     assert style_response.status_code == 200
+    assert ".control-panel" in style_response.text
     assert ".label-strip" in style_response.text

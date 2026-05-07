@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from contextlib import asynccontextmanager
+from dataclasses import replace
 from pathlib import Path
+from threading import RLock
 
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.responses import FileResponse
@@ -11,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import Settings, load_settings
 from .labelary import render_zpl_to_png
-from .models import PrintJobSummary, TestPrintRequest, summarize_job
+from .models import PrinterSettings, PrintJobSummary, TestPrintRequest, summarize_job
 from .store import JobStore
 from .tcp_server import TcpPrinterServer
 
@@ -27,14 +29,39 @@ def create_app(
 ) -> FastAPI:
     active_settings = settings or load_settings()
     active_store = store or JobStore(max_jobs=active_settings.max_jobs)
+    settings_lock = RLock()
     tcp_server: TcpPrinterServer | None = None
+
+    def get_printer_settings() -> PrinterSettings:
+        with settings_lock:
+            return PrinterSettings(
+                label_width_mm=round(active_settings.label_width_in * 25.4, 2),
+                label_height_mm=round(active_settings.label_height_in * 25.4, 2),
+                dpmm=active_settings.dpmm,
+            )
+
+    def get_render_settings() -> Settings:
+        with settings_lock:
+            return active_settings
+
+    def update_printer_settings(payload: PrinterSettings) -> PrinterSettings:
+        nonlocal active_settings
+        with settings_lock:
+            active_settings = replace(
+                active_settings,
+                label_width_in=payload.label_width_mm / 25.4,
+                label_height_in=payload.label_height_mm / 25.4,
+                dpmm=payload.dpmm,
+            )
+            app.state.settings = active_settings
+        return get_printer_settings()
 
     async def process_zpl(zpl: str, *, bytes_received: int) -> str:
         job = active_store.add(zpl, bytes_received=bytes_received)
 
         async def render_job() -> None:
             try:
-                image = await asyncio.to_thread(renderer, zpl, active_settings)
+                image = await asyncio.to_thread(renderer, zpl, get_render_settings())
             except Exception as exc:  # noqa: BLE001 - surface renderer failures in the UI.
                 active_store.mark_failed(job.id, str(exc))
                 return
@@ -81,6 +108,14 @@ def create_app(
     @app.get("/api/jobs", response_model=list[PrintJobSummary])
     def list_jobs(limit: int = 20) -> list[PrintJobSummary]:
         return [summarize_job(job) for job in active_store.latest(limit=limit)]
+
+    @app.get("/api/settings", response_model=PrinterSettings)
+    def read_settings() -> PrinterSettings:
+        return get_printer_settings()
+
+    @app.put("/api/settings", response_model=PrinterSettings)
+    def write_settings(payload: PrinterSettings) -> PrinterSettings:
+        return update_printer_settings(payload)
 
     @app.get("/api/jobs/{job_id}", response_model=PrintJobSummary)
     def get_job(job_id: str) -> PrintJobSummary:

@@ -11,6 +11,11 @@ const soundState = document.querySelector("#sound-state");
 const soundAction = document.querySelector("#sound-action");
 const testPrintButton = document.querySelector("#test-print");
 const modeButtons = [...document.querySelectorAll(".mode-button")];
+const labelWidthInput = document.querySelector("#label-width-mm");
+const labelHeightInput = document.querySelector("#label-height-mm");
+const labelDpmmSelect = document.querySelector("#label-dpmm");
+const applyMediaButton = document.querySelector("#apply-media");
+const mediaStatus = document.querySelector("#media-status");
 
 let latestRenderedId = null;
 let soundEnabled = true;
@@ -18,6 +23,11 @@ let viewMode = localStorage.getItem("zpl-printer-view-mode") || "latest";
 let latestImageSrc = "";
 let stripSignature = "";
 let printAnimationTimer = null;
+let currentPrinterSettings = {
+  label_width_mm: 50,
+  label_height_mm: 25,
+  dpmm: 8,
+};
 const fallbackFeedDurationMs = 2200;
 const printSound = new Audio("/static/printer-sound.mp4");
 printSound.preload = "auto";
@@ -39,6 +49,8 @@ modeButtons.forEach((button) => {
     setViewMode(button.dataset.mode);
   });
 });
+
+applyMediaButton.addEventListener("click", applyPrinterSettings);
 
 testPrintButton.addEventListener("click", async () => {
   testPrintButton.disabled = true;
@@ -168,6 +180,69 @@ function setViewMode(mode) {
   loadJobs();
 }
 
+async function loadPrinterSettings() {
+  const response = await fetch("/api/settings", { cache: "no-store" });
+  if (!response.ok) {
+    mediaStatus.textContent = "Unable to load";
+    return;
+  }
+
+  currentPrinterSettings = await response.json();
+  renderPrinterSettings(currentPrinterSettings);
+}
+
+async function applyPrinterSettings() {
+  const payload = readPrinterSettingsForm();
+  if (!payload) {
+    mediaStatus.textContent = "Check media values";
+    return;
+  }
+
+  applyMediaButton.disabled = true;
+  mediaStatus.textContent = "Applying";
+  try {
+    const response = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error("Unable to apply media");
+    }
+    currentPrinterSettings = await response.json();
+    renderPrinterSettings(currentPrinterSettings);
+  } catch (error) {
+    mediaStatus.textContent = error.message;
+  } finally {
+    applyMediaButton.disabled = false;
+  }
+}
+
+function readPrinterSettingsForm() {
+  const label_width_mm = Number.parseFloat(labelWidthInput.value);
+  const label_height_mm = Number.parseFloat(labelHeightInput.value);
+  const dpmm = Number.parseInt(labelDpmmSelect.value, 10);
+  if (
+    !Number.isFinite(label_width_mm) ||
+    !Number.isFinite(label_height_mm) ||
+    !Number.isInteger(dpmm) ||
+    label_width_mm <= 0 ||
+    label_height_mm <= 0
+  ) {
+    return null;
+  }
+  return { label_width_mm, label_height_mm, dpmm };
+}
+
+function renderPrinterSettings(settings) {
+  labelWidthInput.value = formatNumber(settings.label_width_mm);
+  labelHeightInput.value = formatNumber(settings.label_height_mm);
+  labelDpmmSelect.value = String(settings.dpmm);
+  mediaStatus.textContent = `${formatNumber(settings.label_width_mm)} x ${formatNumber(
+    settings.label_height_mm,
+  )} mm`;
+}
+
 function pulsePrinter() {
   printer.classList.remove("printing");
   if (printAnimationTimer) {
@@ -251,19 +326,30 @@ function escapeHtml(value) {
 
 function buildTestLabel() {
   const now = new Date().toLocaleTimeString();
+  const widthDots = Math.round(currentPrinterSettings.label_width_mm * currentPrinterSettings.dpmm);
+  const heightDots = Math.round(currentPrinterSettings.label_height_mm * currentPrinterSettings.dpmm);
+  const contentWidth = Math.max(widthDots - 48, 120);
+  const barcodeY = Math.min(Math.max(Math.round(heightDots * 0.44), 82), Math.max(heightDots - 86, 82));
+  const footerY = Math.max(heightDots - 28, barcodeY + 62);
   return `^XA
-^PW400
-^LL220
+^PW${widthDots}
+^LL${heightDots}
 ^FO24,24^A0N,30,30^FDZPL-II Emulator^FS
 ^FO24,68^A0N,22,22^FDVirtual print test^FS
-^FO24,104^BY2
+^FO24,${barcodeY}^BY2
 ^BCN,70,Y,N,N
 ^FD${Date.now()}^FS
-^FO24,190^A0N,20,20^FD${now}^FS
+^FO24,${footerY}^A0N,20,20^FB${contentWidth},1,0,L^FD${formatNumber(
+    currentPrinterSettings.label_width_mm,
+  )} x ${formatNumber(currentPrinterSettings.label_height_mm)} mm / ${currentPrinterSettings.dpmm} dpmm / ${now}^FS
 ^XZ`;
 }
 
+function formatNumber(value) {
+  return Number.parseFloat(value).toFixed(1).replace(/\.0$/, "");
+}
+
 updateSoundToggle();
+loadPrinterSettings();
 setViewMode(viewMode);
-loadJobs();
 setInterval(loadJobs, 1200);

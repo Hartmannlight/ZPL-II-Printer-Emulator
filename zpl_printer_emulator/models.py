@@ -36,6 +36,12 @@ class TestPrintRequest(BaseModel):
     zpl: str
 
 
+class PrinterSettings(BaseModel):
+    label_width_mm: float = Field(gt=0, le=300)
+    label_height_mm: float = Field(gt=0, le=300)
+    dpmm: int = Field(ge=6, le=24)
+
+
 def summarize_job(job: PrintJob) -> PrintJobSummary:
     return PrintJobSummary(
         id=job.id,
