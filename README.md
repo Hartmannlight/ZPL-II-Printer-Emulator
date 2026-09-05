@@ -25,7 +25,7 @@ Configure a development printer in PrintHub/ZPLGrid like this:
   vendor: Local
   driver: zpl
   connection:
-    protocol: raw9100
+    protocol: raw_tcp
     host: 127.0.0.1
     port: 9100
     timeout_ms: 3000
