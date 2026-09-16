@@ -3,7 +3,7 @@ name = "zpl-ii-printer-emulator"
 version = "0.1.0"
 description = "Small virtual ZPL II printer with a web preview UI."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.14.7"
 dependencies = [
     "fastapi>=0.115.0",
     "httpx>=0.27.0",
