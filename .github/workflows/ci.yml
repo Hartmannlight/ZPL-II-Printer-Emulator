@@ -31,6 +31,9 @@ jobs:
       with:
         version: 0.12.13
     - name: Install exact lock and test
+      env:
+        UV_PYTHON: ${{ matrix.version }}
+        UV_PYTHON_DOWNLOADS: never
       run: |
         uv lock --check
         uv sync --locked --extra dev
