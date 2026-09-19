@@ -6,7 +6,7 @@ WORKDIR /app
 
 FROM base AS dependencies
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.13
+ARG UV_VERSION=0.12.15
 RUN python -m pip install --no-cache-dir uv==$UV_VERSION
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS=never
 COPY pyproject.toml uv.lock ./
