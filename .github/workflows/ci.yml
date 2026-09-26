@@ -29,7 +29,7 @@ jobs:
         python-version: ${{ matrix.version }}
     - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
       with:
-        version: 0.12.17
+        version: 0.12.18
     - name: Install exact lock and test
       env:
         UV_PYTHON: ${{ matrix.version }}
