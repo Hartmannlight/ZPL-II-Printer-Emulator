@@ -5,7 +5,7 @@ description = "Small virtual ZPL II printer with a web preview UI."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi==0.141.1",
+    "fastapi==0.142.4",
     "httpx==0.28.1",
     "uvicorn[standard]==0.54.0",
 ]
