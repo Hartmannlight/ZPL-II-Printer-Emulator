@@ -3,6 +3,14 @@
 A small virtual ZPL II network printer for development. It listens for raw ZPL on a TCP
 port, renders the label through Labelary, and shows recent print jobs in a minimal web UI.
 
+TCP batches containing multiple `^XA…^XZ` formats produce one image per label
+as soon as each format is complete, without waiting for the connection to close.
+Status queries do not create print jobs. Images are rendered in order, with at
+most two Labelary requests per second. Temporary rate limits (HTTP 429), gateway
+errors and connection failures retry up to four times with backoff and respect
+`Retry-After` up to 30 seconds. Only image rendering is retried; no print data is
+resent. Exhausted retries remain visible as failed jobs and are logged.
+
 ## Quick start
 
 ```bash
