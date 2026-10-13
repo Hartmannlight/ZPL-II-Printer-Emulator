@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import re
 from collections.abc import Callable
 from contextlib import asynccontextmanager
 from dataclasses import replace
@@ -30,6 +32,7 @@ def create_app(
     active_settings = settings or load_settings()
     active_store = store or JobStore(max_jobs=active_settings.max_jobs)
     settings_lock = RLock()
+    render_lock = asyncio.Lock()
     tcp_server: TcpPrinterServer | None = None
 
     def get_printer_settings() -> PrinterSettings:
@@ -58,11 +61,14 @@ def create_app(
 
     async def process_zpl(zpl: str, *, bytes_received: int) -> str:
         job = active_store.add(zpl, bytes_received=bytes_received)
+        render_settings = get_render_settings()
 
         async def render_job() -> None:
             try:
-                image = await asyncio.to_thread(renderer, zpl, get_render_settings())
+                async with render_lock:
+                    image = await asyncio.to_thread(renderer, zpl, render_settings)
             except Exception as exc:  # noqa: BLE001 - surface renderer failures in the UI.
+                logging.getLogger(__name__).error('Virtual label %s could not be rendered: %s', job.id, exc)
                 active_store.mark_failed(job.id, str(exc))
                 return
             active_store.mark_rendered(job.id, image)
@@ -72,7 +78,12 @@ def create_app(
 
     async def handle_tcp_payload(payload: bytes) -> None:
         zpl = payload.decode("utf-8", errors="replace")
-        await process_zpl(zpl, bytes_received=len(payload))
+        # Drivers also send status queries (for example ~HS) on this port.
+        # Those are not label formats and must not become failed print jobs.
+        if '^XA' not in zpl:
+            return
+        for label in re.findall(r'\^XA.*?\^XZ', zpl, flags=re.DOTALL):
+            await process_zpl(label, bytes_received=len(label.encode('utf-8')))
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):

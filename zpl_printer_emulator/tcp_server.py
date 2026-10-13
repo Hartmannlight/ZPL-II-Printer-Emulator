@@ -27,16 +27,25 @@ class TcpPrinterServer:
     async def _handle_client(
         self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ) -> None:
-        chunks: list[bytes] = []
+        buffer = b''
         try:
             while True:
                 chunk = await reader.read(65536)
                 if not chunk:
                     break
-                chunks.append(chunk)
-            payload = b"".join(chunks)
-            if payload:
-                await self._handler(payload)
+                buffer += chunk
+                while True:
+                    start = buffer.find(b'^XA')
+                    if start < 0:
+                        # Retain a possible marker split across TCP packets.
+                        buffer = buffer[-2:]
+                        break
+                    buffer = buffer[start:]
+                    end = buffer.find(b'^XZ', 3)
+                    if end < 0:
+                        break
+                    label, buffer = buffer[:end + 3], buffer[end + 3:]
+                    await self._handler(label)
         finally:
             writer.close()
             await writer.wait_closed()
